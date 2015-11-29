@@ -38,6 +38,7 @@ var listener = http.createServer(function (req, res) {
 
 		var headers = req.headers;
 		headers['user-agent'] = 'Mozilla/5.0 (compatible; SPAuthProxy)';
+		headers.cookie = null;
 
 		sp.request({
 			path: req.url,
