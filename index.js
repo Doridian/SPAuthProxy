@@ -45,7 +45,9 @@ var listener = http.createServer(function (req, res) {
 		if (headers.origin) {
 			headers.origin = headers.origin.replace(config.proxy.url, 'http://speedport.ip');
 		}
-		headers.cookie = null;
+		delete headers.cookie;
+		delete headers.authorization;
+		delete headers.connection;
 
 		sp.request({
 			path: req.url,
@@ -53,12 +55,14 @@ var listener = http.createServer(function (req, res) {
 			headers: headers
 		}, (hasData ? data : null), function (err, spres) {
 			if (err) {
+				console.log(err);
 				// Stuff
 				res.writeHead(500);
 				res.write('Internal SPAuthProxy error');
 				res.end();
 				return;
 			}
+			delete spres.connection;
 			res.writeHead(spres.statusCode, spres.headers);
 			spres.pipe(res);
 		});

@@ -5,6 +5,8 @@ var http = require('http');
 var JSON5 = require('json5');
 var pbkdf2 = require('pbkdf2');
 
+http.globalAgent.keepAlive = true;
+
 function Speedport (ip, password, options) {
 	this.options = options || {};
 	this.options.host = ip;
