@@ -30,7 +30,7 @@ var listener = http.createServer(function (req, res) {
 	req.on('end', function () {
 		if(BADURLS.indexOf(req.url.replace(/\?.*$/, '').toLowerCase()) >= 0) {
 			res.writeHead(302, {
-				Location: 'http://speedport.ip/html/content/overview/index.html'
+				Location: config.proxy.url + '/html/content/overview/index.html'
 			});
 			res.end();
 			return;
@@ -38,10 +38,18 @@ var listener = http.createServer(function (req, res) {
 
 		var headers = req.headers;
 		headers['user-agent'] = 'Mozilla/5.0 (compatible; SPAuthProxy)';
+		if (headers.referer) {
+			headers.referer = headers.referer.replace(config.proxy.url, 'http://speedport.ip');
+		}
+		headers.host = 'speedport.ip';
+		if (headers.origin) {
+			headers.origin = headers.origin.replace(config.proxy.url, 'http://speedport.ip');
+		}
 		headers.cookie = null;
 
 		sp.request({
 			path: req.url,
+			method: req.method,
 			headers: headers
 		}, (hasData ? data : null), function (err, spres) {
 			if (err) {
