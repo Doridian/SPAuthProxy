@@ -73,7 +73,7 @@ var listener = http.createServer(function (req, res) {
 			}
 		});
 		
-		headers['user-agent'] = 'Mozilla/5.0 (compatible; SPAuthProxy)';
+		headers['user-agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36';
 		if (headers.referer) {
 			headers.referer = headers.referer.replace(config.proxy.url, 'http://speedport.ip');
 		}
