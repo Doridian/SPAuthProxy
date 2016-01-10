@@ -54,9 +54,12 @@ Speedport.prototype._dataRequest = function (options, data, cb) {
 	options.method = options.method || 'POST';
 	options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 	options.headers['Content-Length'] = Buffer.byteLength(data);
-	var req = http.request(options, cb);
+	var req = http.request(options, function (req) {
+		return cb(null, req);
+	});
 	req.on('error', function(err) {
 		console.error('DRE', err);
+		cb(err);
 	});
 	req.setTimeout(10000);
 	req.write(data);
@@ -128,7 +131,11 @@ Speedport.prototype.login = function (cb) {
 
 	var self = this;
 
-	this._dataRequest(options, data, function(res) {
+	this._dataRequest(options, data, function(err, res) {
+		if (err) {
+			cb(err);
+			return;
+		}
 		res.setEncoding('utf8');
 		var data = "";
 		res.on('data', function (chunk) {
@@ -226,7 +233,11 @@ Speedport.prototype._sendPassword = function (cb) {
 
 	var self = this;
 
-	this._dataRequest(options, data, function(res) {
+	this._dataRequest(options, data, function(err, res) {
+		if (err) {
+			cb(err);
+			return;
+		}
 		res.setEncoding('utf8');
 		var statusJSON = "";
 		res.on('data', function (chunk) {
