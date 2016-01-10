@@ -17,6 +17,12 @@ var BADURLS = [
 	'/data/Login.json'
 ];
 
+var ALLOWED_HEADERS = [
+	'x-requested-with',
+	'origin',
+	'referer'
+];
+
 var listener = http.createServer(function (req, res) {
 	req.setEncoding('utf8');
 	//res.setEncoding('utf8');
@@ -48,7 +54,7 @@ var listener = http.createServer(function (req, res) {
 		}
 
 		if(BADURLS.indexOf(urlPath) >= 0) {
-			if (headers['x-requested-with'] === 'XMLHttpRequest') {
+			if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
 				res.writeHead(403);
 				res.end();
 				return;
@@ -59,6 +65,13 @@ var listener = http.createServer(function (req, res) {
 			res.end();
 			return;
 		}
+
+		var headers = {};
+		ALLOWED_HEADERS.forEach(function (headerName) {
+			if (req.headers[headerName]) {
+				headers[headerName] = req.headers[headerName];
+			}
+		});
 		
 		headers['user-agent'] = 'Mozilla/5.0 (compatible; SPAuthProxy)';
 		if (headers.referer) {
@@ -68,9 +81,6 @@ var listener = http.createServer(function (req, res) {
 		if (headers.origin) {
 			headers.origin = headers.origin.replace(config.proxy.url, 'http://speedport.ip');
 		}
-		delete headers.cookie;
-		delete headers.authorization;
-		delete headers.connection;
 
 		sp.request({
 			path: req.url,
