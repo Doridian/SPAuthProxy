@@ -14,8 +14,7 @@ var BADURLS = [
 	'/html/login',
 	'/html/login/',
 	'/html/login/index.html',
-	'/data/Login.json',
-	'/engineer/css/lightbox.css'
+	'/data/Login.json'
 ];
 
 var ALLOWED_HEADERS = [
@@ -67,6 +66,12 @@ var listener = http.createServer(function (req, res) {
 			return;
 		}
 
+		var noLoginNeeded = true;
+		var fileExtension = (urlPath.indexOf('.') > 0) ? urlPath.substr(urlPath.lastIndexOf('.') + 1).toLowerCase() : 'bin';
+		if(fileExtension === 'htm' || fileExtension === 'html' || fileExtension === 'json') {
+			noLoginNeeded = false;
+		}
+
 		var headers = {};
 		ALLOWED_HEADERS.forEach(function (headerName) {
 			if (req.headers[headerName]) {
@@ -86,7 +91,8 @@ var listener = http.createServer(function (req, res) {
 		sp.request({
 			path: req.url,
 			method: req.method,
-			headers: headers
+			headers: headers,
+			noLogin: noLoginNeeded
 		}, (hasData ? data : null), function (err, spres) {
 			if (err) {
 				console.log(err);
