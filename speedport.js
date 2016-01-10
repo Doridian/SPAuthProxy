@@ -9,7 +9,7 @@ http.globalAgent.keepAlive = true;
 http.globalAgent.maxSockets = 3;
 
 function _httpDummyCB(res) {
-	res.on('data', functioon () { });
+	res.on('data', function () { });
 }
 
 function Speedport (ip, password, options) {
