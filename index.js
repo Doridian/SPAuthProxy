@@ -14,7 +14,8 @@ var BADURLS = [
 	'/html/login',
 	'/html/login/',
 	'/html/login/index.html',
-	'/data/Login.json'
+	'/data/Login.json',
+	'/engineer/css/lightbox.css'
 ];
 
 var ALLOWED_HEADERS = [
