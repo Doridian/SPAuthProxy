@@ -6,7 +6,7 @@ var JSON5 = require('json5');
 var pbkdf2 = require('pbkdf2');
 
 http.globalAgent.keepAlive = true;
-http.globalAgent.maxSockets = 1;
+http.globalAgent.maxSockets = 3;
 
 function _httpDummyCB(res) {
 	res.on('data', function () { });
@@ -52,6 +52,7 @@ Speedport.prototype._dataRequest = function (options, data, cb) {
 	options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 	options.headers['Content-Length'] = Buffer.byteLength(data);
 	var req = http.request(options, cb);
+	req.setTimeout(10000);
 	req.write(data);
 	req.end();	
 };
@@ -175,6 +176,8 @@ Speedport.prototype.request = function (options, data, cb) {
 		}
 		return cb(null, res);
 	});
+
+	req.setTimeout(10000);
 
 	if (data) {
 		req.write(data);
