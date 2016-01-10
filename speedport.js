@@ -27,7 +27,7 @@ function Speedport (ip, password, options) {
 	this.loggedIn = 0;
 	this._loginCallbacks = [];
 
-	setInterval(2000, this._heartbeat.bind(this));
+	setInterval(this._heartbeat.bind(this), 2000);
 }
 
 Speedport.prototype._heartbeat = function () {
