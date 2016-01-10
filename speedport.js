@@ -34,15 +34,18 @@ function Speedport (ip, password, options) {
 	this._loginInProgress = false;
 	this.loggedIn = 0;
 	this._loginCallbacks = [];
+	this.lastRequest = 0;
 
 	setInterval(this._heartbeat.bind(this), 5000);
 }
 
 Speedport.prototype._heartbeat = function () {
-	this.request({
-		path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 + 100),
-		method: 'GET'
-	}, _reqDummyDB);
+	if (this.lastRequest + 15000 < Date.now()) {
+		this.request({
+			path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 + 100),
+			method: 'GET'
+		}, _reqDummyDB);
+	}
 }
 
 Speedport.prototype._dataRequest = function (options, data, cb) {
@@ -146,6 +149,8 @@ Speedport.prototype.request = function (options, data, cb) {
 		cb = data;
 		data = null;
 	}
+
+	this.lastRequest = Date.now();
 
 	var cookie = this.cookie;
 	if ( cookie && options.headers && options.headers.cookie) {
