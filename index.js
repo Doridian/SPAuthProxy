@@ -28,15 +28,21 @@ var listener = http.createServer(function (req, res) {
 	});
 
 	req.on('end', function () {
+		var headers = req.headers;
+
 		if(BADURLS.indexOf(req.url.replace(/\?.*$/, '').toLowerCase()) >= 0) {
+			if (headers['x-requested-with'] === 'XMLHttpRequest') {
+				res.writeHead(403);
+				res.end();
+				return;
+			}
 			res.writeHead(302, {
 				Location: config.proxy.url + '/html/content/overview/index.html'
 			});
 			res.end();
 			return;
 		}
-
-		var headers = req.headers;
+		
 		headers['user-agent'] = 'Mozilla/5.0 (compatible; SPAuthProxy)';
 		if (headers.referer) {
 			headers.referer = headers.referer.replace(config.proxy.url, 'http://speedport.ip');
