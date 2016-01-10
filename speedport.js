@@ -22,6 +22,9 @@ function Speedport (ip, password, options) {
 	this.sessionID = null;
 	this.cookie = null;
 	this.cookieHeaders = null;
+
+	this._loginInProgress = false;
+	this._loginCallbacks = [];
 }
 
 Speedport.prototype._dataRequest = function (options, data, cb) {
@@ -54,10 +57,27 @@ Speedport.prototype.logout = function (cb) {
 	this.cookieHeaders = null;
 };
 
+Speedport.prototype._loginCBMultiplexer = function(err) {
+	this._loginInProgress = false;
+	this._loginCallbacks.forEach(function (cb) {
+		cb(err);
+	});
+};
+
 /**
 * Requests the password-challenge from the router. Calls handleChallenge() on success.
 */
 Speedport.prototype.login = function (cb) {
+	if (this._loginInProgress) {
+		this._loginCallbacks.push(cb);
+		return;
+	}
+
+	this._loginInProgress = true;
+	this._loginCallbacks = [cb];
+
+	cb = this._loginCBMultiplexer.bind(this);
+
 	this.challengev = null;
 	this.sessionID = null;
 	this.cookie = null;
