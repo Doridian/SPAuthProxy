@@ -35,7 +35,7 @@ function Speedport (ip, password, options) {
 	this.loggedIn = 0;
 	this._loginCallbacks = [];
 
-	setInterval(this._heartbeat.bind(this), 2000);
+	setInterval(this._heartbeat.bind(this), 5000);
 }
 
 Speedport.prototype._heartbeat = function () {
@@ -160,9 +160,10 @@ Speedport.prototype.request = function (options, data, cb) {
 
 	var self = this;
 
-	console.log(options.path);
+	console.log('I', options.path);
 
 	var req = http.request(options, function (res) {
+		console.log('O', options.path);
 		if (res.statusCode == 302 && res.headers.location.indexOf('/html/login/index.html') > 0) {
 			return self.login(function (err) {
 				if (err) {
