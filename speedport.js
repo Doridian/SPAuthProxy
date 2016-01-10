@@ -6,7 +6,7 @@ var JSON5 = require('json5');
 var pbkdf2 = require('pbkdf2');
 
 //http.globalAgent.keepAlive = true;
-//http.globalAgent.maxSockets = 3;
+http.globalAgent.maxSockets = 5;
 
 function _httpDummyCB(res) {
 	res.on('data', function () { });
@@ -175,10 +175,7 @@ Speedport.prototype.request = function (options, data, cb) {
 
 	var self = this;
 
-	console.log('I', options.path);
-
 	var req = http.request(options, function (res) {
-		console.log('O', options.path);
 		if (res.statusCode == 302 && res.headers.location.indexOf('/html/login/index.html') > 0) {
 			return self.login(function (err) {
 				if (err) {
@@ -194,7 +191,7 @@ Speedport.prototype.request = function (options, data, cb) {
 	});
 
 	req.on('error', function(err) {
-		console.error('DRE', err);
+		console.error('DRE', options, err);
 		cb(err);
 	});
 
