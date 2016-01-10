@@ -60,6 +60,19 @@ var listener = http.createServer(function (req, res) {
 			method: req.method,
 			headers: headers
 		}, (hasData ? data : null), function (err, spres) {
+			if(process.env.REQUEST_DEBUG === 'yes') {
+				sp.request({
+					path: '/data/heartbeat.json',
+					method: 'GET'
+				}, null, function (err, spres) {
+					console.log(req.url, ' = ');
+					if (err) {
+						console.log('SE: ' + err);
+						return;
+					}
+					console.log('OK');
+				});
+			}
 			if (err) {
 				console.log(err);
 				// Stuff
