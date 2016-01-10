@@ -177,7 +177,7 @@ Speedport.prototype.request = function (options, data, cb) {
 
 	var req = http.request(options, function (res) {
 		if (res.statusCode == 302 && res.headers.location.indexOf('/html/login/index.html') > 0) {
-			console.log('EERK', options.path);
+			console.log('EERK', options.path, res.headers);
 			return self.login(function (err) {
 				if (err) {
 					return cb(err);
