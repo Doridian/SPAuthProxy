@@ -40,12 +40,10 @@ function Speedport (ip, password, options) {
 }
 
 Speedport.prototype._heartbeat = function () {
-	if (this.lastRequest + 15000 < Date.now()) {
-		this.request({
-			path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 + 100),
-			method: 'GET'
-		}, _reqDummyDB);
-	}
+	this.request({
+		path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 + 100),
+		method: 'GET'
+	}, _reqDummyDB);
 }
 
 Speedport.prototype._dataRequest = function (options, data, cb) {
