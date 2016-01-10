@@ -8,6 +8,10 @@ var pbkdf2 = require('pbkdf2');
 http.globalAgent.keepAlive = true;
 http.globalAgent.maxSockets = 3;
 
+function _httpDummyCB(res) {
+	res.on('data', functioon () { });
+}
+
 function Speedport (ip, password, options) {
 	this.options = options || {};
 	this.options.host = ip;
@@ -21,6 +25,7 @@ function Speedport (ip, password, options) {
 }
 
 Speedport.prototype._dataRequest = function (options, data, cb) {
+	console.log('REQ ', options.path);
 	options.headers = options.headers || {};
 	options.method = options.method || 'POST';
 	options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
@@ -41,7 +46,7 @@ Speedport.prototype.logout = function (cb) {
 		logout: "byby"
 	});
 
-	this._dataRequest(options, data, function () { });
+	this._dataRequest(options, data, _httpDummyCB);
 
 	this.challengev = null;
 	this.sessionID = null;
