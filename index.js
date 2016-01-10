@@ -23,6 +23,8 @@ var ALLOWED_HEADERS = [
 	'referer'
 ];
 
+var cache = require('./cache');
+
 var listener = http.createServer(function (req, res) {
 	req.setEncoding('utf8');
 	//res.setEncoding('utf8');
@@ -66,10 +68,18 @@ var listener = http.createServer(function (req, res) {
 			return;
 		}
 
-		var noLoginNeeded = true;
+		var isStatic = true;
 		var fileExtension = (urlPath.indexOf('.') > 0) ? urlPath.substr(urlPath.lastIndexOf('.') + 1).toLowerCase() : 'bin';
-		if(fileExtension === 'htm' || fileExtension === 'html' || fileExtension === 'json') {
-			noLoginNeeded = false;
+		if (fileExtension === 'htm' || fileExtension === 'html' || fileExtension === 'json') {
+			isStatic = false;
+		}
+
+		if (isStatic && cache[req.url]) {
+			var cData = cache[req.url];
+			res.writeHead(cData.statusCode, cData.headers);
+			res.write(cData.data);
+			res.end();
+			return;
 		}
 
 		var headers = {};
@@ -92,7 +102,7 @@ var listener = http.createServer(function (req, res) {
 			path: req.url,
 			method: req.method,
 			headers: headers,
-			noLogin: noLoginNeeded
+			noLogin: isStatic
 		}, (hasData ? data : null), function (err, spres) {
 			if (err) {
 				console.log(err);
@@ -103,15 +113,35 @@ var listener = http.createServer(function (req, res) {
 				return;
 			}
 			delete spres.connection;
+
+			spres.headers['x-caching'] = isStatic ? 'LOOKUP' : 'PASS';
 			res.writeHead(spres.statusCode, spres.headers);
+
+			var cData = null;
+			if (isStatic) {
+				spres.headers['x-caching'] = 'HIT';
+				cData = {
+					headers: spres.headers,
+					statusCode: spres.statusCode,
+					data: ''
+				};
+			}
+
 			spres.on('data', function (data) {
 				res.write(data);
+				if (cData) {
+					cData.data += data;
+				}
 			});
+			
 			spres.on('end', function () {
 				res.end();
-			});
-			spres.on('error', function (err) {
-				console.error(err);
+				if (cData) {
+					cache[req.url] = cData;
+					fs.writeFile('./cache.json', JSON.stringify(cache), function (err) {
+						console.warn('Error writing cache: ' + err);
+					});
+				}
 			});
 		});
 	});
