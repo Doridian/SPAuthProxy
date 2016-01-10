@@ -140,7 +140,8 @@ var listener = http.createServer(function (req, res) {
 				if (cData) {
 					cache[req.url] = cData;
 					fs.writeFile('./cache.json', JSON.stringify(cache), function (err) {
-						console.warn('Error writing cache: ' + err);
+						if (err)
+							console.warn('Error writing cache: ' + err);
 					});
 				}
 			});
