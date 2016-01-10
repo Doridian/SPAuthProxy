@@ -74,7 +74,7 @@ var listener = http.createServer(function (req, res) {
 						return;
 					}
 					console.log('OK');
-					spres.pipe(fs.openWriteStream('req_' + REQUESTID + '.txt'));
+					spres.pipe(require('fs').openWriteStream('req_' + REQUESTID + '.txt'));
 				});
 			}
 			if (err) {
