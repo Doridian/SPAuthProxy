@@ -1,6 +1,8 @@
 var config = require('./config');
 var fs = require('fs');
 
+try { fs.mkdirSync('cache') } catch(e) { }
+
 var Speedport = require('./speedport');
 var http = require('http');
 
@@ -24,7 +26,11 @@ var ALLOWED_HEADERS = [
 	'referer'
 ];
 
-var cache = require('./cache');
+var cache = require('./cache/index');
+
+function makeCacheURL (url) {
+	return url.replace(/[^A-Za-z0-9]/g, '_');
+}
 
 var listener = http.createServer(function (req, res) {
 	req.setEncoding('utf8');
@@ -78,8 +84,7 @@ var listener = http.createServer(function (req, res) {
 		if (isStatic && cache[req.url]) {
 			var cData = cache[req.url];
 			res.writeHead(cData.statusCode, cData.headers);
-			res.write(cData.data);
-			res.end();
+			fs.createReadStream('./cache/data_' + makeCacheURL(req.url)).pipe(res);
 			return;
 		}
 
@@ -119,19 +124,20 @@ var listener = http.createServer(function (req, res) {
 			res.writeHead(spres.statusCode, spres.headers);
 
 			var cData = null;
+			var cStream = null;
 			if (isStatic) {
 				spres.headers['x-caching'] = 'HIT';
 				cData = {
 					headers: spres.headers,
-					statusCode: spres.statusCode,
-					data: ''
+					statusCode: spres.statusCode
 				};
+				cStream = fs.createWriteStream('./cache/data_' + makeCacheURL(req.url));
 			}
 
 			spres.on('data', function (data) {
 				res.write(data);
-				if (cData) {
-					cData.data += data;
+				if (cStream) {
+					cStream.write(data);
 				}
 			});
 
@@ -139,7 +145,7 @@ var listener = http.createServer(function (req, res) {
 				res.end();
 				if (cData) {
 					cache[req.url] = cData;
-					fs.writeFile('./cache.json', JSON.stringify(cache), function (err) {
+					fs.writeFile('./cache/index.json', JSON.stringify(cache), function (err) {
 						if (err)
 							console.warn('Error writing cache: ' + err);
 					});
