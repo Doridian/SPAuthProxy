@@ -177,6 +177,7 @@ Speedport.prototype.request = function (options, data, cb) {
 
 	var req = http.request(options, function (res) {
 		if (res.statusCode == 302 && res.headers.location.indexOf('/html/login/index.html') > 0) {
+			_httpDummyCB(res);
 			if (options.noLogin) {
 				return cb('Not logged in or 404');
 			}
