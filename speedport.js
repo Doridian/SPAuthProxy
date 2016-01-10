@@ -26,6 +26,17 @@ function Speedport (ip, password, options) {
 	this._loginInProgress = false;
 	this.loggedIn = 0;
 	this._loginCallbacks = [];
+
+	setInterval(2000, this._heartbeat.bind(this));
+}
+
+Speedport.prototype._heartbeat = function () {
+	if (this.loggedIn > 0) {
+		this.request({
+			path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 - 100),
+			method: 'GET'
+		}, _httpDummyCB);
+	}
 }
 
 Speedport.prototype._dataRequest = function (options, data, cb) {
