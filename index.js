@@ -72,8 +72,6 @@ var listener = http.createServer(function (req, res) {
 		delete headers.authorization;
 		delete headers.connection;
 
-		if(req.url.)
-
 		sp.request({
 			path: req.url,
 			method: req.method,
