@@ -155,6 +155,10 @@ Speedport.prototype.login = function (cb) {
 };
 
 Speedport.prototype.request = function (options, data, cb) {
+	if (options.loginTries === undefined) {
+		options.loginTries = 3;
+	}
+
 	if (!cb) {
 		cb = data;
 		data = null;
@@ -178,9 +182,10 @@ Speedport.prototype.request = function (options, data, cb) {
 	var req = http.request(options, function (res) {
 		if (res.statusCode == 302 && res.headers.location.indexOf('/html/login/index.html') > 0) {
 			_httpDummyCB(res);
-			if (options.noLogin) {
+			if (options.loginTries <= 0) {
 				return cb('Not logged in or 404');
 			}
+			options.loginTries--;
 			return self.login(function (err) {
 				if (err) {
 					return cb(err);
