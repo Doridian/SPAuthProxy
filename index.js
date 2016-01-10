@@ -5,6 +5,8 @@ var http = require('http');
 
 var sp = new Speedport(config.speedport.host, config.speedport.password);
 
+var REQUESTID = 0;
+
 var BADURLS = [
 	'/',
 	'/html',
@@ -65,13 +67,14 @@ var listener = http.createServer(function (req, res) {
 					path: '/data/heartbeat.json',
 					method: 'GET'
 				}, null, function (err, spres) {
-					console.log(req.url, ' = ');
+					REQUESTID++;
+					console.log(REQUESTID, req.url, ' = ');
 					if (err) {
 						console.log('SE: ' + err);
 						return;
 					}
 					console.log('OK');
-					spres.pipe(process.stdout);
+					spres.pipe(fs.openWriteStream('req_' + REQUESTID + '.txt'));
 				});
 			}
 			if (err) {
