@@ -55,9 +55,12 @@ Speedport.prototype._dataRequest = function (options, data, cb) {
 	options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 	options.headers['Content-Length'] = Buffer.byteLength(data);
 	var req = http.request(options, cb);
+	req.on('error', function(err) {
+		console.error('DRE', err);
+	});
 	req.setTimeout(10000);
 	req.write(data);
-	req.end();	
+	req.end();
 };
 
 Speedport.prototype.logout = function (cb) {
@@ -181,6 +184,11 @@ Speedport.prototype.request = function (options, data, cb) {
 			res.headers['set-cookie'] = self.cookieHeaders;
 		}
 		return cb(null, res);
+	});
+
+	req.on('error', function(err) {
+		console.error('DRE', err);
+		cb(err);
 	});
 
 	req.setTimeout(10000);
