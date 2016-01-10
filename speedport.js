@@ -40,7 +40,7 @@ function Speedport (ip, password, options) {
 
 Speedport.prototype._heartbeat = function () {
 	this.request({
-		path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 - 100),
+		path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 + 100),
 		method: 'GET'
 	}, _reqDummyDB);
 }
