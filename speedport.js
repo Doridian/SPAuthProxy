@@ -58,7 +58,7 @@ Speedport.prototype._dataRequest = function (options, data, cb) {
 		return cb(null, req);
 	});
 	req.on('error', function(err) {
-		console.error('DRE', options.path, err);
+		console.error('DRE', options, err);
 		cb(err);
 	});
 	req.setTimeout(10000);
