@@ -47,7 +47,6 @@ Speedport.prototype._heartbeat = function () {
 }
 
 Speedport.prototype._dataRequest = function (options, data, cb) {
-	console.log('REQ ', options.path);
 	options.headers = options.headers || {};
 	options.method = options.method || 'POST';
 	options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
