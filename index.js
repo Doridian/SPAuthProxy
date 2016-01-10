@@ -103,6 +103,9 @@ var listener = http.createServer(function (req, res) {
 			spres.on('end', function () {
 				res.end();
 			});
+			spres.on('error', function (err) {
+				console.error(err);
+			});
 		});
 	});
 });
