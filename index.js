@@ -1,4 +1,5 @@
 var config = require('./config');
+var fs = require('fs');
 
 var Speedport = require('./speedport');
 var http = require('http');
@@ -133,7 +134,7 @@ var listener = http.createServer(function (req, res) {
 					cData.data += data;
 				}
 			});
-			
+
 			spres.on('end', function () {
 				res.end();
 				if (cData) {
