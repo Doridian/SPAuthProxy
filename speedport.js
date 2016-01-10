@@ -146,6 +146,7 @@ Speedport.prototype.request = function (options, data, cb) {
 
 	var req = http.request(options, function (res) {
 		if (res.statusCode == 302 && res.headers.location.indexOf('/html/login/index.html') > 0) {
+			self.loggedIn = false;
 			return self.login(function (err) {
 				if (err) {
 					return cb(err);
