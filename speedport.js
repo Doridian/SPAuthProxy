@@ -6,7 +6,7 @@ var JSON5 = require('json5');
 var pbkdf2 = require('pbkdf2');
 
 http.globalAgent.keepAlive = true;
-http.globalAgent.maxSockets = 3;
+http.globalAgent.maxSockets = 1;
 
 function _httpDummyCB(res) {
 	res.on('data', function () { });
@@ -24,6 +24,7 @@ function Speedport (ip, password, options) {
 	this.cookieHeaders = null;
 
 	this._loginInProgress = false;
+	this.loggedIn = false;
 	this._loginCallbacks = [];
 }
 
@@ -59,6 +60,7 @@ Speedport.prototype.logout = function (cb) {
 
 Speedport.prototype._loginCBMultiplexer = function(err) {
 	this._loginInProgress = false;
+	this.loggedIn = !err;
 	this._loginCallbacks.forEach(function (cb) {
 		cb(err);
 	});
@@ -69,6 +71,11 @@ Speedport.prototype._loginCBMultiplexer = function(err) {
 * Requests the password-challenge from the router. Calls handleChallenge() on success.
 */
 Speedport.prototype.login = function (cb) {
+	if (this.loggedIn) {
+		cb(null);
+		return;
+	}
+
 	if (this._loginInProgress) {
 		this._loginCallbacks.push(cb);
 		return;
