@@ -87,7 +87,7 @@ var listener = http.createServer(function (req, res) {
 			}
 			delete spres.connection;
 			res.writeHead(spres.statusCode, spres.headers);
-			spres.on('data' function (data) {
+			spres.on('data', function (data) {
 				res.write(data);
 			});
 			spres.on('end', function () {
