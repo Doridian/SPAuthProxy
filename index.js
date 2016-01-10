@@ -32,7 +32,22 @@ var listener = http.createServer(function (req, res) {
 	req.on('end', function () {
 		var headers = req.headers;
 
-		if(BADURLS.indexOf(req.url.replace(/\?.*$/, '').toLowerCase()) >= 0) {
+		var urlPath = req.url.replace(/\?.*$/, '');
+
+		if(urlPath === '/data/heartbeat.json') {
+			res.writeHead(200);
+			res.write(JSON.stringify([
+			    {
+			        vartype:"status",
+			        varid:"loginstate",
+			        varvalue:"1"
+			    }
+			]);
+			res.end();
+			return;
+		}
+
+		if(BADURLS.indexOf(urlPath) >= 0) {
 			if (headers['x-requested-with'] === 'XMLHttpRequest') {
 				res.writeHead(403);
 				res.end();
@@ -57,26 +72,13 @@ var listener = http.createServer(function (req, res) {
 		delete headers.authorization;
 		delete headers.connection;
 
+		if(req.url.)
+
 		sp.request({
 			path: req.url,
 			method: req.method,
 			headers: headers
 		}, (hasData ? data : null), function (err, spres) {
-			if(process.env.REQUEST_DEBUG === 'yes') {
-				sp.request({
-					path: '/data/heartbeat.json',
-					method: 'GET'
-				}, null, function (err, spres) {
-					REQUESTID++;
-					console.log(REQUESTID, req.url, ' = ');
-					if (err) {
-						console.log('SE: ' + err);
-						return;
-					}
-					console.log('OK');
-					spres.pipe(require('fs').createWriteStream('req_' + REQUESTID + '.txt'));
-				});
-			}
 			if (err) {
 				console.log(err);
 				// Stuff
