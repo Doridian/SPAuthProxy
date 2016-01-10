@@ -42,7 +42,7 @@ var listener = http.createServer(function (req, res) {
 			        varid:"loginstate",
 			        varvalue:"1"
 			    }
-			]);
+			]));
 			res.end();
 			return;
 		}
