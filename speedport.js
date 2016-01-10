@@ -12,6 +12,14 @@ function _httpDummyCB(res) {
 	res.on('data', function () { });
 }
 
+function _reqDummyDB(err, res) {
+	if (err) {
+		console.error(err);
+		return;
+	}
+	_httpDummyCB(res);
+}
+
 function Speedport (ip, password, options) {
 	this.options = options || {};
 	this.options.host = ip;
@@ -31,12 +39,10 @@ function Speedport (ip, password, options) {
 }
 
 Speedport.prototype._heartbeat = function () {
-	if (this.loggedIn > 0) {
-		this.request({
-			path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 - 100),
-			method: 'GET'
-		}, _httpDummyCB);
-	}
+	this.request({
+		path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 - 100),
+		method: 'GET'
+	}, _httpDummyCB);
 }
 
 Speedport.prototype._dataRequest = function (options, data, cb) {
