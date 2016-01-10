@@ -275,7 +275,7 @@ Speedport.prototype._sendPassword = function (cb) {
 				return cb('Login failed');
 			}
 
-			self.cookie = "challengev=" + self.challengev + "; " + self.sessionID + "; derivedk=" + derivedk;
+			self.cookie = "challengev=" + self.challengev + "; " + self.sessionID + "; derivedk=" + derivedk + "; lang=de";
 
 			cb(null);
 		});
