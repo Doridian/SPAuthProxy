@@ -62,6 +62,7 @@ Speedport.prototype._loginCBMultiplexer = function(err) {
 	this._loginCallbacks.forEach(function (cb) {
 		cb(err);
 	});
+	this._loginCallbacks = [];
 };
 
 /**
