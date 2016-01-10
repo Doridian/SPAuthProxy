@@ -5,8 +5,8 @@ var http = require('http');
 var JSON5 = require('json5');
 var pbkdf2 = require('pbkdf2');
 
-http.globalAgent.keepAlive = true;
-http.globalAgent.maxSockets = 3;
+//http.globalAgent.keepAlive = true;
+//http.globalAgent.maxSockets = 3;
 
 function _httpDummyCB(res) {
 	res.on('data', function () { });
