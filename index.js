@@ -71,6 +71,7 @@ var listener = http.createServer(function (req, res) {
 						return;
 					}
 					console.log('OK');
+					spres.close();
 				});
 			}
 			if (err) {
