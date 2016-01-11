@@ -80,6 +80,9 @@ var listener = http.createServer(function (req, res) {
 		if (fileExtension === 'htm' || fileExtension === 'html' || fileExtension === 'json') {
 			isStatic = false;
 		}
+		if(req.method !== 'GET') {
+			isStatic = false;
+		}
 
 		if (isStatic && cache[req.url]) {
 			var cData = cache[req.url];
@@ -130,6 +133,7 @@ var listener = http.createServer(function (req, res) {
 			var cStream = null;
 			if (isStatic) {
 				spres.headers['x-caching'] = 'HIT';
+				delete spres.headers.date;
 				cData = {
 					headers: spres.headers,
 					statusCode: spres.statusCode
