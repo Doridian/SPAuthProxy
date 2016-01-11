@@ -29,7 +29,7 @@ var ALLOWED_HEADERS = [
 var cache = require('./cache/index');
 
 function makeCacheURL (url) {
-	return url.replace(/[^A-Za-z0-9]/g, '_');
+	return url.replace(/[^A-Za-z0-9.]/g, '_');
 }
 
 var listener = http.createServer(function (req, res) {
