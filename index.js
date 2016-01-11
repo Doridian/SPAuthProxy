@@ -84,10 +84,10 @@ var listener = http.createServer(function (req, res) {
 			isStatic = false;
 		}
 
-		if (isStatic && cache[req.url]) {
-			var cData = cache[req.url];
+		if (isStatic && cache[urlPath]) {
+			var cData = cache[urlPath];
 			res.writeHead(cData.statusCode, cData.headers);
-			fs.createReadStream('./cache/data_' + makeCacheURL(req.url)).pipe(res);
+			fs.createReadStream('./cache/data_' + makeCacheURL(urlPath)).pipe(res);
 			return;
 		}
 
@@ -140,7 +140,7 @@ var listener = http.createServer(function (req, res) {
 					headers: spres.headers,
 					statusCode: spres.statusCode
 				};
-				cStream = fs.createWriteStream('./cache/data_' + makeCacheURL(req.url));
+				cStream = fs.createWriteStream('./cache/data_' + makeCacheURL(urlPath));
 			}
 
 			spres.on('data', function (data) {
@@ -153,7 +153,7 @@ var listener = http.createServer(function (req, res) {
 			spres.on('end', function () {
 				res.end();
 				if (cData) {
-					cache[req.url] = cData;
+					cache[urlPath] = cData;
 					fs.writeFile('./cache/index.json', JSON.stringify(cache), function (err) {
 						if (err)
 							console.warn('Error writing cache: ' + err);
