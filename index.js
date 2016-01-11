@@ -134,6 +134,7 @@ var listener = http.createServer(function (req, res) {
 			if (isStatic) {
 				spres.headers['x-caching'] = 'HIT';
 				delete spres.headers.date;
+				delete spres.headers['content-length'];
 				cData = {
 					headers: spres.headers,
 					statusCode: spres.statusCode
