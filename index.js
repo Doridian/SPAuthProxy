@@ -105,10 +105,13 @@ var listener = http.createServer(function (req, res) {
 		}
 
 		sp.request({
-			path: req.url,
-			method: req.method,
-			headers: headers,
-			noLogin: isStatic
+			http: {
+				path: req.url,
+				method: req.method,
+				headers: headers
+			},
+			loginTries: isStatic ? 0 : undefined,
+			noCookies: isStatic
 		}, (hasData ? data : null), function (err, spres) {
 			if (err) {
 				console.log(err);

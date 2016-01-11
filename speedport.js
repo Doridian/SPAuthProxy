@@ -41,8 +41,11 @@ function Speedport (ip, password, options) {
 
 Speedport.prototype._heartbeat = function () {
 	this.request({
-		path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 + 100),
-		method: 'GET'
+		http: {
+			path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 + 100),
+			method: 'GET',
+			noCookies: true
+		}
 	}, _reqDummyDB);
 }
 
@@ -163,12 +166,14 @@ Speedport.prototype.request = function (options, data, cb) {
 
 	this.lastRequest = Date.now();
 
+	var httpOptions = options.http || {};
+
 	var cookie = this.cookie;
-	if ( cookie && options.headers && options.headers.cookie) {
-		cookie += '; ' + options.headers.cookie;
+	if ( cookie && httpOptions.headers && httpOptions.headers.cookie) {
+		cookie += '; ' + httpOptions.headers.cookie;
 	}
 
-	_.extend(options, this.options, {
+	_.extend(httpOptions, this.options, {
 		headers: {
 			cookie: this.cookie
 		}
@@ -176,7 +181,7 @@ Speedport.prototype.request = function (options, data, cb) {
 
 	var self = this;
 
-	var req = http.request(options, function (res) {
+	var req = http.request(httpOptions, function (res) {
 		if (res.statusCode == 302 && res.headers.location.indexOf('/html/login/index.html') > 0) {
 			_httpDummyCB(res);
 			if (options.loginTries <= 0) {
@@ -190,7 +195,7 @@ Speedport.prototype.request = function (options, data, cb) {
 				return self.request(options, data, cb);
 			});
 		}
-		if (self.cookieHeaders) {
+		if (self.cookieHeaders && !options.noCookies) {
 			res.headers['set-cookie'] = self.cookieHeaders;
 		}
 		return cb(null, res);
