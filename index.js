@@ -8,8 +8,6 @@ var http = require('http');
 
 var sp = new Speedport(config.speedport.host, config.speedport.password);
 
-var REQUESTID = 0;
-
 var BADURLS = [
 	'/',
 	'/html',
@@ -26,6 +24,14 @@ var ALLOWED_HEADERS = [
 	'referer'
 ];
 
+var HEARTBEAT_OVERRIDE = JSON.stringify([
+	{
+		vartype:"status",
+		varid:"loginstate",
+		varvalue:"1"
+	}
+]);
+
 var cache = require('./cache/index');
 
 function makeCacheURL (url) {
@@ -34,7 +40,6 @@ function makeCacheURL (url) {
 
 var listener = http.createServer(function (req, res) {
 	req.setEncoding('utf8');
-	//res.setEncoding('utf8');
 
 	var hasData = false;
 	var data = "";
@@ -51,13 +56,7 @@ var listener = http.createServer(function (req, res) {
 
 		if(urlPath === '/data/heartbeat.json') {
 			res.writeHead(200);
-			res.write(JSON.stringify([
-			    {
-			        vartype:"status",
-			        varid:"loginstate",
-			        varvalue:"1"
-			    }
-			]));
+			res.write(HEARTBEAT_OVERRIDE);
 			res.end();
 			return;
 		}
