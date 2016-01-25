@@ -14,8 +14,7 @@ var BADURLS = [
 	'/html/',
 	'/html/login',
 	'/html/login/',
-	'/html/login/index.html',
-	'/data/Login.json'
+	'/html/login/index.html'
 ];
 
 var ALLOWED_HEADERS = [
@@ -46,14 +45,14 @@ var listener = http.createServer(function (req, res) {
 
 		var urlPath = req.url.replace(/\?.*$/, '');
 
-		if(urlPath === '/data/heartbeat.json') {
+		if (urlPath === '/data/heartbeat.json') {
 			res.writeHead(200);
 			res.write(sp.getHeartbeat());
 			res.end();
 			return;
 		}
 
-		if(BADURLS.indexOf(urlPath) >= 0) {
+		if (BADURLS.indexOf(urlPath) >= 0 || (urlPath === '/data/Login.json' && req.method !== 'GET')) {
 			if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
 				res.writeHead(403);
 				res.end();
@@ -71,7 +70,7 @@ var listener = http.createServer(function (req, res) {
 		if (fileExtension === 'htm' || fileExtension === 'html' || fileExtension === 'json') {
 			isStatic = false;
 		}
-		if(req.method !== 'GET') {
+		if (req.method !== 'GET') {
 			isStatic = false;
 		}
 
