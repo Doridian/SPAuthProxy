@@ -24,14 +24,6 @@ var ALLOWED_HEADERS = [
 	'referer'
 ];
 
-var HEARTBEAT_OVERRIDE = JSON.stringify([
-	{
-		vartype:"status",
-		varid:"loginstate",
-		varvalue:"1"
-	}
-]);
-
 var cache = require('./cache/index');
 
 function makeCacheURL (url) {
@@ -56,7 +48,7 @@ var listener = http.createServer(function (req, res) {
 
 		if(urlPath === '/data/heartbeat.json') {
 			res.writeHead(200);
-			res.write(HEARTBEAT_OVERRIDE);
+			res.write(sp.getHeartbeat());
 			res.end();
 			return;
 		}

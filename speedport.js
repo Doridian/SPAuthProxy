@@ -8,16 +8,36 @@ var pbkdf2 = require('pbkdf2');
 http.globalAgent.keepAlive = true;
 http.globalAgent.maxSockets = 3;
 
-function _httpDummyCB(res) {
+function _httpDummyCB (res) {
 	res.on('data', function () { });
 }
 
-function _reqDummyDB(err, res) {
+function _reqDummyCB (err, res) {
 	if (err) {
 		console.error(err);
 		return;
 	}
+
 	_httpDummyCB(res);
+}
+
+function _reqStringCB (cb, err, res) {
+	if (err) {
+		cb(err);
+		return;
+	}
+
+	res.setEncoding('utf8');
+	var data = '';
+	res.on('data', function (chunk) {
+		data += chunk;
+	});
+	res.on('end', function () {
+		cb(null, data);
+	});
+	res.on('error', function (err) {
+		cb(err);
+	});
 }
 
 function Speedport (ip, password, options) {
@@ -35,6 +55,14 @@ function Speedport (ip, password, options) {
 	this.loggedIn = 0;
 	this._loginCallbacks = [];
 	this.lastRequest = 0;
+
+	this._lastHeartbeat = JSON.stringify([
+		{
+			vartype:"status",
+			varid:"loginstate",
+			varvalue:"1"
+		}
+	]);
 
 	setInterval(this._heartbeat.bind(this), 5000);
 }
@@ -101,14 +129,27 @@ Speedport.prototype.request = function (options, data, cb) {
 };
 
 Speedport.prototype._heartbeat = function () {
+	var self = this;
+
 	this.request({
 		http: {
 			path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 + 100),
 			method: 'GET',
 			noCookies: true
 		}
-	}, _reqDummyDB);
-}
+	}, _reqStringCB.bind(function (err, data) {
+		if (err) {
+			console.error('Heartbeat error', err);
+			return;
+		}
+
+		self._lastHeartbeat = data;
+	}));
+};
+
+Speedport.prototype.getHeartbeat = function () {
+	return this._lastHeartbeat;
+};
 
 Speedport.prototype._dataRequest = function (options, data, cb) {
 	options.headers = options.headers || {};
@@ -173,27 +214,20 @@ Speedport.prototype.login = function (cb) {
 
 	var self = this;
 
-	this._dataRequest(options, data, function(err, res) {
+	this._dataRequest(options, data, _reqStringCB.bind(function (err, data) {
 		if (err) {
 			cb(err);
 			return;
 		}
-		res.setEncoding('utf8');
-		var data = "";
-		res.on('data', function (chunk) {
-			data += chunk;
-		});
-		res.on('end', function () {
-			// challengev -> will be sent as cookie 
-			try {
-				self.challengev = JSON5.parse(data)[1].varvalue;
-			} catch(e) {
-				console.error(e);
-			}
-			self._sendPassword(cb);          
-		});
-		res.on('error', cb);
-	});
+
+		// challengev -> will be sent as cookie 
+		try {
+			self.challengev = JSON5.parse(data)[1].varvalue;
+		} catch(e) {
+			console.error(e);
+		}
+		self._sendPassword(cb);
+	}));
 };
 
 /** 
@@ -222,55 +256,48 @@ Speedport.prototype._sendPassword = function (cb) {
 
 	var self = this;
 
-	this._dataRequest(options, data, function(err, res) {
+	this._dataRequest(options, data, _reqStringCB.bind(function (err, statusJSON) {
 		if (err) {
 			cb(err);
 			return;
 		}
-		res.setEncoding('utf8');
-		var statusJSON = "";
-		res.on('data', function (chunk) {
-			statusJSON += chunk;
-		});
-		res.on('end', function () {
-			try {
-				var status = JSON5.parse(statusJSON);
 
-				// Result json uses "vartype" which is value, option or status.
-				// Simply ignore this and put the other stuff into a new dict
-				var statusDict = {};
-				status.forEach(function (v) {
-					statusDict[v.varid] = v.varvalue;
-				});
+		try {
+			var status = JSON5.parse(statusJSON);
 
-				// are we happy?
-				if (statusDict['login'] != 'success') {
-					return cb(statusDict);
-				}
+			// Result json uses "vartype" which is value, option or status.
+			// Simply ignore this and put the other stuff into a new dict
+			var statusDict = {};
+			status.forEach(function (v) {
+				statusDict[v.varid] = v.varvalue;
+			});
 
-				self.cookieHeaders = "" + res.headers['set-cookie'];
-				if (typeof self.cookieHeaders != "array") {
-					self.cookieHeaders = [self.cookieHeaders];
-				}
-				self.cookieHeaders.push("derivedk=" + derivedk + "; path=/;");
-				self.cookieHeaders.push("challengev=" + self.challengev + "; path=/;");
-
-				var sid = res.headers['set-cookie'].toString().match(/^.*(SessionID_R3=[^;]*);.*/);
-				self.sessionID = sid[1];
-			} catch(e) { 
-				console.error(e);
+			// are we happy?
+			if (statusDict['login'] != 'success') {
+				return cb(statusDict);
 			}
 
-			if (!self.sessionID) {
-				return cb('Login failed');
+			self.cookieHeaders = "" + res.headers['set-cookie'];
+			if (typeof self.cookieHeaders != "array") {
+				self.cookieHeaders = [self.cookieHeaders];
 			}
+			self.cookieHeaders.push("derivedk=" + derivedk + "; path=/;");
+			self.cookieHeaders.push("challengev=" + self.challengev + "; path=/;");
 
-			self.cookie = "challengev=" + self.challengev + "; " + self.sessionID + "; derivedk=" + derivedk;
+			var sid = res.headers['set-cookie'].toString().match(/^.*(SessionID_R3=[^;]*);.*/);
+			self.sessionID = sid[1];
+		} catch(e) { 
+			console.error(e);
+		}
 
-			cb(null);
-		});
-		res.on('error', cb);
-	});
+		if (!self.sessionID) {
+			return cb('Login failed');
+		}
+
+		self.cookie = "challengev=" + self.challengev + "; " + self.sessionID + "; derivedk=" + derivedk;
+
+		cb(null);
+	}));
 };
 
 module.exports = Speedport;
