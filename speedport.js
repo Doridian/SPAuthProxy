@@ -137,7 +137,7 @@ Speedport.prototype._heartbeat = function () {
 			method: 'GET',
 			noCookies: true
 		}
-	}, _reqStringCB.bind(function (err, data) {
+	}, _reqStringCB.bind(this, function (err, data) {
 		if (err) {
 			console.error('Heartbeat error', err);
 			return;
@@ -214,7 +214,7 @@ Speedport.prototype.login = function (cb) {
 
 	var self = this;
 
-	this._dataRequest(options, data, _reqStringCB.bind(function (err, data) {
+	this._dataRequest(options, data, _reqStringCB.bind(this, function (err, data) {
 		if (err) {
 			cb(err);
 			return;
@@ -256,7 +256,7 @@ Speedport.prototype._sendPassword = function (cb) {
 
 	var self = this;
 
-	this._dataRequest(options, data, _reqStringCB.bind(function (err, statusJSON) {
+	this._dataRequest(options, data, _reqStringCB.bind(this, function (err, statusJSON) {
 		if (err) {
 			cb(err);
 			return;
