@@ -23,7 +23,7 @@ function _reqDummyCB (err, res) {
 
 function _reqStringCB (cb, err, res) {
 	if (err) {
-		cb(err);
+		cb(err, null, res);
 		return;
 	}
 
@@ -33,10 +33,10 @@ function _reqStringCB (cb, err, res) {
 		data += chunk;
 	});
 	res.on('end', function () {
-		cb(null, data);
+		cb(null, data, res);
 	});
 	res.on('error', function (err) {
-		cb(err);
+		cb(err, null, res);
 	});
 }
 
@@ -255,7 +255,7 @@ Speedport.prototype._sendPassword = function (cb) {
 
 	var self = this;
 
-	this._dataRequest(options, data, _reqStringCB.bind(this, function (err, statusJSON) {
+	this._dataRequest(options, data, _reqStringCB.bind(this, function (err, statusJSON, res) {
 		if (err) {
 			cb(err);
 			return;
