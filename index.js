@@ -53,7 +53,9 @@ var listener = http.createServer(function (req, res) {
 		var urlPath = req.url.replace(/\?.*$/, '');
 
 		if (urlPath === '/data/heartbeat.json') {
-			res.writeHead(200);
+			res.writeHead(200, {
+				'Content-Type': 'application/javascript'
+			});
 			res.write(sp.lastHeartbeat);
 			res.end();
 			return;
@@ -70,7 +72,9 @@ var listener = http.createServer(function (req, res) {
 				reply = LOGOUT_SUCCESS;
 			}
 			if (reply) {
-				res.writeHead(200);
+				res.writeHead(200, {
+					'Content-Type': 'application/javascript'
+				});
 				res.write(reply);				
 			} else {
 				res.writeHead(404);
