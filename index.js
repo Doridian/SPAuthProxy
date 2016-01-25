@@ -24,11 +24,7 @@ var ALLOWED_HEADERS = [
 	'referer'
 ];
 
-var LOGOUT_SUCCESS = '[{
-	"vartype":"status",
-	"varid":"status",
-	"varvalue":"ok"
-}]';
+var LOGOUT_SUCCESS = '[{"vartype":"status","varid":"status","varvalue":"ok"}]';
 
 var cache = require('./cache/index');
 
