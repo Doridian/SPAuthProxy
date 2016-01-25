@@ -39,6 +39,67 @@ function Speedport (ip, password, options) {
 	setInterval(this._heartbeat.bind(this), 5000);
 }
 
+Speedport.prototype.request = function (options, data, cb) {
+	if (options.loginTries === undefined) {
+		options.loginTries = 3;
+	}
+
+	if (!cb) {
+		cb = data;
+		data = null;
+	}
+
+	this.lastRequest = Date.now();
+
+	var httpOptions = options.http || {};
+
+	var cookie = this.cookie;
+	if ( cookie && httpOptions.headers && httpOptions.headers.cookie) {
+		cookie += '; ' + httpOptions.headers.cookie;
+	}
+
+	_.extend(httpOptions, this.options, {
+		headers: {
+			cookie: this.cookie
+		}
+	});
+
+	var self = this;
+
+	var req = http.request(httpOptions, function (res) {
+		if (res.statusCode == 302 && res.headers.location.indexOf('/html/login/index.html') > 0) {
+			_httpDummyCB(res);
+			if (options.loginTries <= 0) {
+				return cb('Not logged in or 404');
+			}
+			options.loginTries--;
+			return self.login(function (err) {
+				if (err) {
+					return cb(err);
+				}
+				return self.request(options, data, cb);
+			});
+		}
+		if (self.cookieHeaders && !options.noCookies) {
+			res.headers['set-cookie'] = self.cookieHeaders;
+		}
+		return cb(null, res);
+	});
+
+	req.on('error', function(err) {
+		console.error('DRE', options, err);
+		cb(err);
+	});
+
+	req.setTimeout(10000);
+
+	if (data) {
+		req.write(data);
+	}
+
+	req.end();
+};
+
 Speedport.prototype._heartbeat = function () {
 	this.request({
 		http: {
@@ -64,25 +125,6 @@ Speedport.prototype._dataRequest = function (options, data, cb) {
 	req.setTimeout(10000);
 	req.write(data);
 	req.end();
-};
-
-Speedport.prototype.logout = function (cb) {
-	var options = {};
-	_.extend(options, this.options, {
-		path: '/data/Login.json'
-	});
-
-	var data = querystring.stringify({
-		csrf_token: "nulltoken",
-		logout: "byby"
-	});
-
-	this._dataRequest(options, data, _httpDummyCB);
-
-	this.challengev = null;
-	this.sessionID = null;
-	this.cookie = null;
-	this.cookieHeaders = null;
 };
 
 Speedport.prototype._loginCBMultiplexer = function(err) {
@@ -152,67 +194,6 @@ Speedport.prototype.login = function (cb) {
 		});
 		res.on('error', cb);
 	});
-};
-
-Speedport.prototype.request = function (options, data, cb) {
-	if (options.loginTries === undefined) {
-		options.loginTries = 3;
-	}
-
-	if (!cb) {
-		cb = data;
-		data = null;
-	}
-
-	this.lastRequest = Date.now();
-
-	var httpOptions = options.http || {};
-
-	var cookie = this.cookie;
-	if ( cookie && httpOptions.headers && httpOptions.headers.cookie) {
-		cookie += '; ' + httpOptions.headers.cookie;
-	}
-
-	_.extend(httpOptions, this.options, {
-		headers: {
-			cookie: this.cookie
-		}
-	});
-
-	var self = this;
-
-	var req = http.request(httpOptions, function (res) {
-		if (res.statusCode == 302 && res.headers.location.indexOf('/html/login/index.html') > 0) {
-			_httpDummyCB(res);
-			if (options.loginTries <= 0) {
-				return cb('Not logged in or 404');
-			}
-			options.loginTries--;
-			return self.login(function (err) {
-				if (err) {
-					return cb(err);
-				}
-				return self.request(options, data, cb);
-			});
-		}
-		if (self.cookieHeaders && !options.noCookies) {
-			res.headers['set-cookie'] = self.cookieHeaders;
-		}
-		return cb(null, res);
-	});
-
-	req.on('error', function(err) {
-		console.error('DRE', options, err);
-		cb(err);
-	});
-
-	req.setTimeout(10000);
-
-	if (data) {
-		req.write(data);
-	}
-
-	req.end();
 };
 
 /** 
