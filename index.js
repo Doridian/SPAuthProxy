@@ -1,10 +1,11 @@
 var config = require('./config');
 var fs = require('fs');
+var http = require('http');
+var qs = require('querystring');
 
 try { fs.mkdirSync('cache') } catch(e) { }
 
 var Speedport = require('./speedport');
-var http = require('http');
 
 var sp = new Speedport(config.speedport.host, config.speedport.password);
 
@@ -22,6 +23,12 @@ var ALLOWED_HEADERS = [
 	'origin',
 	'referer'
 ];
+
+var LOGOUT_SUCCESS = '[{
+	"vartype":"status",
+	"varid":"status",
+	"varvalue":"ok"
+}]';
 
 var cache = require('./cache/index');
 
@@ -47,12 +54,32 @@ var listener = http.createServer(function (req, res) {
 
 		if (urlPath === '/data/heartbeat.json') {
 			res.writeHead(200);
-			res.write(sp.getHeartbeat());
+			res.write(sp.lastHeartbeat);
 			res.end();
 			return;
 		}
 
-		if (BADURLS.indexOf(urlPath) >= 0 || (urlPath === '/data/Login.json' && req.method !== 'GET')) {
+		if (urlPath === '/data/Login.json' && hasData) { // Interject!
+			var post = qs.parse(data);
+			var reply = null;
+			if (post.challengev === 'null') {
+				reply = sp.loginStageOneReply;
+			} else if(post.password) {
+				reply = sp.loginStageTwoReply;
+			} else if(post.logout == 'byby') {
+				reply = LOGOUT_SUCCESS;
+			}
+			if (reply) {
+				res.writeHead(200);
+				res.write(reply);				
+			} else {
+				res.writeHead(404);
+			}
+			res.end();
+			return;
+		}
+
+		if (BADURLS.indexOf(urlPath) >= 0) {
 			if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
 				res.writeHead(403);
 				res.end();

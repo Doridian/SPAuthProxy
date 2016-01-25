@@ -56,7 +56,10 @@ function Speedport (ip, password, options) {
 	this._loginCallbacks = [];
 	this.lastRequest = 0;
 
-	this._lastHeartbeat = JSON.stringify([
+	this.loginStageOneReply = null;
+	this.loginStageTwoReply = null;
+
+	this.lastHeartbeat = JSON.stringify([
 		{
 			vartype:"status",
 			varid:"loginstate",
@@ -142,12 +145,8 @@ Speedport.prototype._heartbeat = function () {
 			return;
 		}
 
-		self._lastHeartbeat = data;
+		self.lastHeartbeat = data;
 	}));
-};
-
-Speedport.prototype.getHeartbeat = function () {
-	return this._lastHeartbeat;
 };
 
 Speedport.prototype._dataRequest = function (options, data, cb) {
@@ -219,6 +218,8 @@ Speedport.prototype.login = function (cb) {
 			return;
 		}
 
+		self.loginStageOneReply = data;
+
 		// challengev -> will be sent as cookie 
 		try {
 			self.challengev = JSON5.parse(data)[1].varvalue;
@@ -260,6 +261,8 @@ Speedport.prototype._sendPassword = function (cb) {
 			cb(err);
 			return;
 		}
+
+		self.loginStageTwoReply = statusJSON;
 
 		try {
 			var status = JSON5.parse(statusJSON);
