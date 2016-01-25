@@ -14,7 +14,7 @@ function _httpDummyCB (res) {
 
 function _reqDummyCB (err, res) {
 	if (err) {
-		console.error(err);
+		console.error(err, err.stack);
 		return;
 	}
 
@@ -115,7 +115,6 @@ Speedport.prototype.request = function (options, data, cb) {
 	});
 
 	req.on('error', function(err) {
-		console.error('DRE', options, err);
 		cb(err);
 	});
 
@@ -139,7 +138,7 @@ Speedport.prototype._heartbeat = function () {
 		}
 	}, _reqStringCB.bind(this, function (err, data) {
 		if (err) {
-			console.error('Heartbeat error', err);
+			console.error('Heartbeat error', err, err.stack);
 			return;
 		}
 
@@ -224,7 +223,7 @@ Speedport.prototype.login = function (cb) {
 		try {
 			self.challengev = JSON5.parse(data)[1].varvalue;
 		} catch(e) {
-			console.error(e);
+			console.error(e, e.stack);
 		}
 		self._sendPassword(cb);
 	}));
@@ -287,7 +286,7 @@ Speedport.prototype._sendPassword = function (cb) {
 			var sid = res.headers['set-cookie'].toString().match(/^.*(SessionID_R3=[^;]*);.*/);
 			self.sessionID = sid[1];
 		} catch(e) { 
-			console.error(e);
+			console.error(e, e.stack);
 		}
 
 		if (!self.sessionID) {
