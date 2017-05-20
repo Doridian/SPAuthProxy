@@ -284,6 +284,7 @@ Speedport.prototype._sendPassword = function (cb) {
 				self.cookieHeaders = [self.cookieHeaders];
 			}
 			self.cookieHeaders.push("derivedk=" + derivedk + "; path=/;");
+			self.cookieHeaders.push("challengev=" + self.challengev + "; path=/;");
 
 			var sid = res.headers['set-cookie'].toString().match(/^.*(SessionID_R3=[^;]*);.*/);
 			self.sessionID = sid[1];
@@ -295,7 +296,7 @@ Speedport.prototype._sendPassword = function (cb) {
 			return cb('Login failed');
 		}
 
-		self.cookie = self.sessionID + "; derivedk=" + derivedk;
+		self.cookie = "challengev=" + self.challengev + "; " + self.sessionID + "; derivedk=" + derivedk;
 
 		cb(null);
 	}));
