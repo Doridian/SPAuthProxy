@@ -152,17 +152,21 @@ Speedport.prototype._heartbeat = function () {
 Speedport.prototype._dataRequest = function (options, data, cb) {
 	options.headers = options.headers || {};
 	options.method = options.method || 'POST';
-	options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-	options.headers['Content-Length'] = Buffer.byteLength(data);
-	var req = http.request(options, function (req) {
-		return cb(null, req);
+	if (data) {
+		options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+		options.headers['Content-Length'] = Buffer.byteLength(data);
+	}
+	var req = http.request(options, function (res) {
+		return cb(null, res);
 	});
 	req.on('error', function(err) {
 		console.error('DRE', options, err);
 		cb(err);
 	});
 	req.setTimeout(10000);
-	req.write(data);
+	if (data) {
+		req.write(data);
+	}
 	req.end();
 };
 
@@ -199,20 +203,15 @@ Speedport.prototype.login = function (cb) {
 	this.cookie = null;
 	this.cookieHeaders = null;
 
-	var data = querystring.stringify({
-		csrf_token: "nulltoken",
-		showpw: "0",
-		challengev: "null"
-	});
-
 	var options = {};
 	_.extend(options, this.options, {
-		path: '/data/Login.json'
+		path: '/html/login/index.html',
+		method: 'GET',
 	});
 
 	var self = this;
 
-	this._dataRequest(options, data, _reqStringCB.bind(this, function (err, data) {
+	this._dataRequest(options, undefined, _reqStringCB.bind(this, function (err, data) {
 		if (err) {
 			cb(err);
 			return;
@@ -220,9 +219,9 @@ Speedport.prototype.login = function (cb) {
 
 		self.loginStageOneReply = data;
 
-		// challengev -> will be sent as cookie 
+		// challengev -> will be sent as query var 
 		try {
-			self.challengev = JSON5.parse(data)[1].varvalue;
+			self.challengev = data.match(/var challenge = "([^"]+)";/)[1];
 		} catch(e) {
 			console.error(e, e.stack);
 		}
@@ -242,7 +241,8 @@ Speedport.prototype._sendPassword = function (cb) {
 	var data = querystring.stringify({
 		password: sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(this.challengev + ":" + this.password)),
 		showpw: "0",
-		csrf_token: "nulltoken"
+		csrf_token: "nulltoken",
+		challengev: this.challengev,
 	});
 
 	var loginsalt = this.challengev.substr(0, 16);
@@ -284,7 +284,6 @@ Speedport.prototype._sendPassword = function (cb) {
 				self.cookieHeaders = [self.cookieHeaders];
 			}
 			self.cookieHeaders.push("derivedk=" + derivedk + "; path=/;");
-			self.cookieHeaders.push("challengev=" + self.challengev + "; path=/;");
 
 			var sid = res.headers['set-cookie'].toString().match(/^.*(SessionID_R3=[^;]*);.*/);
 			self.sessionID = sid[1];
@@ -296,7 +295,7 @@ Speedport.prototype._sendPassword = function (cb) {
 			return cb('Login failed');
 		}
 
-		self.cookie = "challengev=" + self.challengev + "; " + self.sessionID + "; derivedk=" + derivedk;
+		self.cookie = self.sessionID + "; derivedk=" + derivedk;
 
 		cb(null);
 	}));

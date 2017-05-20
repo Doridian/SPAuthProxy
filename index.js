@@ -101,7 +101,7 @@ var listener = http.createServer(function (req, res) {
 			isStatic = false;
 		}
 
-		if (isStatic && cache[urlPath]) {
+		if (isStatic && cache[urlPath] && config.cacheEnabled) {
 			var cData = cache[urlPath];
 			res.writeHead(cData.statusCode, cData.headers);
 			fs.createReadStream('./cache/data_' + makeCacheURL(urlPath)).pipe(res);
@@ -148,7 +148,7 @@ var listener = http.createServer(function (req, res) {
 
 			var cData = null;
 			var cStream = null;
-			if (isStatic) {
+			if (isStatic && config.cacheEnabled) {
 				spres.headers['x-caching'] = 'HIT';
 				delete spres.headers.date;
 				delete spres.headers['content-length'];
@@ -169,7 +169,7 @@ var listener = http.createServer(function (req, res) {
 
 			spres.on('end', function () {
 				res.end();
-				if (cData) {
+				if (cData && config.cacheEnabled) {
 					cache[urlPath] = cData;
 					fs.writeFile('./cache/index.json', JSON.stringify(cache), function (err) {
 						if (err)

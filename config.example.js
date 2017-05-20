@@ -3,6 +3,7 @@ module.exports = {
 		host: '192.168.2.1',
 		password: '123456'
 	},
+	cacheEnabled: false,
 	proxy: {
 		host: '127.0.0.1',
 		port: 1337,
