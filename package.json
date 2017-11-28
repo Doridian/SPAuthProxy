@@ -10,8 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "json5": "^0.4.0",
-    "lodash": "^3.10.1",
-    "pbkdf2": "^3.0.4",
-    "sjcl": "^1.0.3"
+    "lodash": "^3.10.1"
   }
 }
