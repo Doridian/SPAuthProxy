@@ -1,4 +1,3 @@
-var _ = require('lodash');
 var querystring = require('querystring');
 var http = require('http');
 var JSON5 = require('json5');
@@ -88,7 +87,7 @@ Speedport.prototype.request = function (options, data, cb) {
 		cookie += '; ' + httpOptions.headers.cookie;
 	}
 
-	_.extend(httpOptions, this.options, {
+	Object.assign(httpOptions, this.options, {
 		headers: {
 			cookie: this.cookie
 		}
@@ -203,7 +202,7 @@ Speedport.prototype.login = function (cb) {
 	this.cookieHeaders = null;
 
 	var options = {};
-	_.extend(options, this.options, {
+	Object.assign(options, this.options, {
 		path: '/html/login/index.html',
 		method: 'GET',
 	});
@@ -249,7 +248,7 @@ Speedport.prototype._sendPassword = function (cb) {
 	var derivedk = crypto.pbkdf2Sync(sha256password, loginsalt, 1000, 16, 'sha1').toString('hex');
 
 	var options = {};
-	_.assign(options, this.options, {
+	Object.assign(options, this.options, {
 		path: '/data/Login.json'
 	});
 
