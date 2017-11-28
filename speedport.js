@@ -1,9 +1,8 @@
 var _ = require('lodash');
-var sjcl = require("sjcl");
 var querystring = require('querystring');
 var http = require('http');
 var JSON5 = require('json5');
-var pbkdf2 = require('pbkdf2');
+var crypto = require('crypto');
 
 http.globalAgent.keepAlive = true;
 http.globalAgent.maxSockets = 3;
@@ -239,15 +238,15 @@ Speedport.prototype._sendPassword = function (cb) {
 	}
 
 	var data = querystring.stringify({
-		password: sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(this.challengev + ":" + this.password)),
+		password: crypto.createHash('sha256').update(this.challengev).update(':').update(this.password).digest('hex'),
 		showpw: "0",
 		csrf_token: "nulltoken",
 		challengev: this.challengev,
 	});
 
 	var loginsalt = this.challengev.substr(0, 16);
-	var sha256password = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(this.password));
-	var derivedk = pbkdf2.pbkdf2Sync(sha256password, loginsalt, 1000, 16).toString('hex');
+	var sha256password = crypto.createHash('sha256').update(this.password).digest('hex');
+	var derivedk = crypto.pbkdf2Sync(sha256password, loginsalt, 1000, 16, 'sha1').toString('hex');
 
 	var options = {};
 	_.assign(options, this.options, {
