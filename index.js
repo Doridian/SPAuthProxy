@@ -46,8 +46,6 @@ const listener = http.createServer((req, res) => {
 	});
 
 	req.on('end', () => {
-		const headers = req.headers;
-
 		const urlPath = req.url.replace(/\?.*$/, '');
 
 		if (urlPath === '/data/heartbeat.json') {
