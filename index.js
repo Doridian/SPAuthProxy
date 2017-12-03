@@ -28,7 +28,13 @@ const ALLOWED_HEADERS = [
 
 const LOGOUT_SUCCESS = '[{"vartype":"status","varid":"status","varvalue":"ok"}]';
 
-const cache = require('./cache/index');
+const cache = (() => { 
+	try {
+		return require('./cache/index');
+	} catch(e) {
+		return {};
+	}
+})();
 
 function makeCacheURL (url) {
 	return url.replace(/[^A-Za-z0-9.]/g, '_');
