@@ -28,7 +28,7 @@ const ALLOWED_HEADERS = [
 
 const LOGOUT_SUCCESS = '[{"vartype":"status","varid":"status","varvalue":"ok"}]';
 
-const cache = (() => { 
+const cache = (() => {
 	try {
 		return require('./cache/index');
 	} catch(e) {
