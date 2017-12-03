@@ -1,13 +1,15 @@
-var querystring = require('querystring');
-var http = require('http');
-var JSON5 = require('json5');
-var crypto = require('crypto');
+'use strict';
+
+const querystring = require('querystring');
+const http = require('http');
+const JSON5 = require('json5');
+const crypto = require('crypto');
 
 http.globalAgent.keepAlive = true;
 http.globalAgent.maxSockets = 3;
 
 function _httpDummyCB (res) {
-	res.on('data', function () { });
+	res.on('data', () => { });
 }
 
 function _reqDummyCB (err, res) {
@@ -26,14 +28,14 @@ function _reqStringCB (cb, err, res) {
 	}
 
 	res.setEncoding('utf8');
-	var data = '';
-	res.on('data', function (chunk) {
+	let data = '';
+	res.on('data', (chunk) => {
 		data += chunk;
 	});
-	res.on('end', function () {
+	res.on('end', () => {
 		cb(null, data, res);
 	});
-	res.on('error', function (err) {
+	res.on('error', (err) => {
 		cb(err, null, res);
 	});
 }
@@ -80,11 +82,11 @@ Speedport.prototype.request = function (options, data, cb) {
 
 	this.lastRequest = Date.now();
 
-	var httpOptions = options.http || {};
+	const httpOptions = options.http || {};
 
-	var cookie = this.cookie;
-	if ( cookie && httpOptions.headers && httpOptions.headers.cookie) {
-		cookie += '; ' + httpOptions.headers.cookie;
+	let cookie = this.cookie;
+	if (cookie && httpOptions.headers && httpOptions.headers.cookie) {
+		cookie += `; ${httpOptions.headers.cookie}`;
 	}
 
 	Object.assign(httpOptions, this.options, {
@@ -93,16 +95,16 @@ Speedport.prototype.request = function (options, data, cb) {
 		}
 	});
 
-	var self = this;
+	const self = this;
 
-	var req = http.request(httpOptions, function (res) {
+	const req = http.request(httpOptions, (res) => {
 		if (res.statusCode == 302 && res.headers.location.indexOf('/html/login/index.html') > 0) {
 			_httpDummyCB(res);
 			if (options.loginTries <= 0) {
 				return cb('Not logged in or 404');
 			}
 			options.loginTries--;
-			return self.login(function (err) {
+			return self.login((err) => {
 				if (err) {
 					return cb(err);
 				}
@@ -115,9 +117,7 @@ Speedport.prototype.request = function (options, data, cb) {
 		return cb(null, res);
 	});
 
-	req.on('error', function(err) {
-		cb(err);
-	});
+	req.on('error', cb);
 
 	req.setTimeout(10000);
 
@@ -129,15 +129,15 @@ Speedport.prototype.request = function (options, data, cb) {
 };
 
 Speedport.prototype._heartbeat = function () {
-	var self = this;
+	const self = this;
 
 	this.request({
 		http: {
-			path: '/data/heartbeat.json?_time=' + Date.now() + '&_rand=' + Math.floor(Math.random() * 900 + 100),
+			path: `/data/heartbeat.json?_time=${Date.now()}&_rand=${Math.floor(Math.random() * 900 + 100)}`,
 			method: 'GET',
 			noCookies: true
 		}
-	}, _reqStringCB.bind(this, function (err, data) {
+	}, _reqStringCB.bind(this, (err, data) => {
 		if (err) {
 			console.error('Heartbeat error', err, err.stack);
 			return;
@@ -154,13 +154,10 @@ Speedport.prototype._dataRequest = function (options, data, cb) {
 		options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 		options.headers['Content-Length'] = Buffer.byteLength(data);
 	}
-	var req = http.request(options, function (res) {
+	const req = http.request(options, (res) => {
 		return cb(null, res);
 	});
-	req.on('error', function(err) {
-		console.error('DRE', options, err);
-		cb(err);
-	});
+	req.on('error', cb);
 	req.setTimeout(10000);
 	if (data) {
 		req.write(data);
@@ -168,12 +165,10 @@ Speedport.prototype._dataRequest = function (options, data, cb) {
 	req.end();
 };
 
-Speedport.prototype._loginCBMultiplexer = function(err) {
+Speedport.prototype._loginCBMultiplexer = function (err) {
 	this._loginInProgress = false;
 	this.loggedIn = err ? 0 : Date.now();
-	this._loginCallbacks.forEach(function (cb) {
-		cb(err);
-	});
+	this._loginCallbacks.forEach((cb) => cb(err));
 	this._loginCallbacks = [];
 };
 
@@ -201,15 +196,15 @@ Speedport.prototype.login = function (cb) {
 	this.cookie = null;
 	this.cookieHeaders = null;
 
-	var options = {};
+	const options = {};
 	Object.assign(options, this.options, {
 		path: '/html/login/index.html',
 		method: 'GET',
 	});
 
-	var self = this;
+	const self = this;
 
-	this._dataRequest(options, undefined, _reqStringCB.bind(this, function (err, data) {
+	this._dataRequest(options, undefined, _reqStringCB.bind(this, (err, data) => {
 		if (err) {
 			cb(err);
 			return;
@@ -217,7 +212,7 @@ Speedport.prototype.login = function (cb) {
 
 		self.loginStageOneReply = data;
 
-		// challengev -> will be sent as query var 
+		// challengev -> will be sent as query var
 		try {
 			self.challengev = data.match(/var challenge = "([^"]+)";/)[1];
 		} catch(e) {
@@ -236,25 +231,25 @@ Speedport.prototype._sendPassword = function (cb) {
 		return cb('No challengeV');
 	}
 
-	var data = querystring.stringify({
+	const data = querystring.stringify({
 		password: crypto.createHash('sha256').update(this.challengev).update(':').update(this.password).digest('hex'),
-		showpw: "0",
-		csrf_token: "nulltoken",
+		showpw: '0',
+		csrf_token: 'nulltoken',
 		challengev: this.challengev,
 	});
 
-	var loginsalt = this.challengev.substr(0, 16);
-	var sha256password = crypto.createHash('sha256').update(this.password).digest('hex');
-	var derivedk = crypto.pbkdf2Sync(sha256password, loginsalt, 1000, 16, 'sha1').toString('hex');
+	const loginsalt = this.challengev.substr(0, 16);
+	const sha256password = crypto.createHash('sha256').update(this.password).digest('hex');
+	const derivedk = crypto.pbkdf2Sync(sha256password, loginsalt, 1000, 16, 'sha1').toString('hex');
 
-	var options = {};
+	const options = {};
 	Object.assign(options, this.options, {
 		path: '/data/Login.json'
 	});
 
-	var self = this;
+	const self = this;
 
-	this._dataRequest(options, data, _reqStringCB.bind(this, function (err, statusJSON, res) {
+	this._dataRequest(options, data, _reqStringCB.bind(this, (err, statusJSON, res) => {
 		if (err) {
 			cb(err);
 			return;
@@ -263,12 +258,12 @@ Speedport.prototype._sendPassword = function (cb) {
 		self.loginStageTwoReply = statusJSON;
 
 		try {
-			var status = JSON5.parse(statusJSON);
+			const status = JSON5.parse(statusJSON);
 
 			// Result json uses "vartype" which is value, option or status.
 			// Simply ignore this and put the other stuff into a new dict
-			var statusDict = {};
-			status.forEach(function (v) {
+			const statusDict = {};
+			status.forEach((v) => {
 				statusDict[v.varid] = v.varvalue;
 			});
 
@@ -277,14 +272,14 @@ Speedport.prototype._sendPassword = function (cb) {
 				return cb(statusDict);
 			}
 
-			self.cookieHeaders = "" + res.headers['set-cookie'];
-			if (typeof self.cookieHeaders != "array") {
+			self.cookieHeaders = `${res.headers['set-cookie']}`;
+			if (typeof self.cookieHeaders != 'array') {
 				self.cookieHeaders = [self.cookieHeaders];
 			}
-			self.cookieHeaders.push("derivedk=" + derivedk + "; path=/;");
-			self.cookieHeaders.push("challengev=" + self.challengev + "; path=/;");
+			self.cookieHeaders.push(`derivedk=${derivedk}; path=/;`);
+			self.cookieHeaders.push(`challengev=${self.challengev}; path=/;`);
 
-			var sid = res.headers['set-cookie'].toString().match(/^.*(SessionID_R3=[^;]*);.*/);
+			const sid = res.headers['set-cookie'].toString().match(/^.*(SessionID_R3=[^;]*);.*/);
 			self.sessionID = sid[1];
 		} catch(e) { 
 			console.error(e, e.stack);
@@ -294,7 +289,7 @@ Speedport.prototype._sendPassword = function (cb) {
 			return cb('Login failed');
 		}
 
-		self.cookie = "challengev=" + self.challengev + "; " + self.sessionID + "; derivedk=" + derivedk;
+		self.cookie = `challengev=${self.challengev}; ${self.sessionID}; derivedk=${derivedk}`;
 
 		cb(null);
 	}));

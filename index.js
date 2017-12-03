@@ -1,15 +1,17 @@
-var config = require('./config');
-var fs = require('fs');
-var http = require('http');
-var qs = require('querystring');
+'use strict';
+
+const config = require('./config');
+const fs = require('fs');
+const http = require('http');
+const qs = require('querystring');
 
 try { fs.mkdirSync('cache') } catch(e) { }
 
-var Speedport = require('./speedport');
+const Speedport = require('./speedport');
 
-var sp = new Speedport(config.speedport.host, config.speedport.password);
+const sp = new Speedport(config.speedport.host, config.speedport.password);
 
-var BADURLS = [
+const BADURLS = [
 	'/',
 	'/html',
 	'/html/',
@@ -18,35 +20,35 @@ var BADURLS = [
 	'/html/login/index.html'
 ];
 
-var ALLOWED_HEADERS = [
+const ALLOWED_HEADERS = [
 	'x-requested-with',
 	'origin',
 	'referer'
 ];
 
-var LOGOUT_SUCCESS = '[{"vartype":"status","varid":"status","varvalue":"ok"}]';
+const LOGOUT_SUCCESS = '[{"vartype":"status","varid":"status","varvalue":"ok"}]';
 
-var cache = require('./cache/index');
+const cache = require('./cache/index');
 
 function makeCacheURL (url) {
 	return url.replace(/[^A-Za-z0-9.]/g, '_');
 }
 
-var listener = http.createServer(function (req, res) {
+const listener = http.createServer((req, res) => {
 	req.setEncoding('utf8');
 
-	var hasData = false;
-	var data = "";
+	const hasData = false;
+	let data = '';
 
-	req.on('data', function (chunk) {
+	req.on('data', (chunk) => {
 		data += chunk;
 		hasData = true;
 	});
 
-	req.on('end', function () {
-		var headers = req.headers;
+	req.on('end', () => {
+		const headers = req.headers;
 
-		var urlPath = req.url.replace(/\?.*$/, '');
+		const urlPath = req.url.replace(/\?.*$/, '');
 
 		if (urlPath === '/data/heartbeat.json') {
 			res.writeHead(200, {
@@ -58,8 +60,8 @@ var listener = http.createServer(function (req, res) {
 		}
 
 		if (urlPath === '/data/Login.json' && hasData) { // Interject!
-			var post = qs.parse(data);
-			var reply = null;
+			const post = qs.parse(data);
+			const reply = null;
 			if (post.challengev === 'null') {
 				reply = sp.loginStageOneReply;
 			} else if(post.password) {
@@ -86,14 +88,14 @@ var listener = http.createServer(function (req, res) {
 				return;
 			}
 			res.writeHead(302, {
-				Location: config.proxy.url + '/html/content/overview/index.html'
+				Location: `${config.proxy.url}/html/content/overview/index.html`
 			});
 			res.end();
 			return;
 		}
 
-		var isStatic = true;
-		var fileExtension = (urlPath.indexOf('.') > 0) ? urlPath.substr(urlPath.lastIndexOf('.') + 1).toLowerCase() : 'bin';
+		let isStatic = true;
+		const fileExtension = (urlPath.indexOf('.') > 0) ? urlPath.substr(urlPath.lastIndexOf('.') + 1).toLowerCase() : 'bin';
 		if (fileExtension === 'htm' || fileExtension === 'html' || fileExtension === 'json') {
 			isStatic = false;
 		}
@@ -102,14 +104,14 @@ var listener = http.createServer(function (req, res) {
 		}
 
 		if (isStatic && cache[urlPath] && config.cacheEnabled) {
-			var cData = cache[urlPath];
+			const cData = cache[urlPath];
 			res.writeHead(cData.statusCode, cData.headers);
-			fs.createReadStream('./cache/data_' + makeCacheURL(urlPath)).pipe(res);
+			fs.createReadStream(`./cache/data_${makeCacheURL(urlPath)}`).pipe(res);
 			return;
 		}
 
-		var headers = {};
-		ALLOWED_HEADERS.forEach(function (headerName) {
+		const headers = {};
+		ALLOWED_HEADERS.forEach((headerName) => {
 			if (req.headers[headerName]) {
 				headers[headerName] = req.headers[headerName];
 			}
@@ -132,9 +134,9 @@ var listener = http.createServer(function (req, res) {
 			},
 			loginTries: isStatic ? 0 : undefined,
 			noCookies: isStatic
-		}, (hasData ? data : null), function (err, spres) {
+		}, (hasData ? data : null), (err, spres) => {
 			if (err) {
-				console.log(err);
+				console.warn(err);
 				// Stuff
 				res.writeHead(500);
 				res.write('Internal SPAuthProxy error');
@@ -146,8 +148,8 @@ var listener = http.createServer(function (req, res) {
 			spres.headers['x-caching'] = isStatic ? 'LOOKUP' : 'PASS';
 			res.writeHead(spres.statusCode, spres.headers);
 
-			var cData = null;
-			var cStream = null;
+			let cData = null;
+			let cStream = null;
 			if (isStatic && config.cacheEnabled) {
 				spres.headers['x-caching'] = 'HIT';
 				delete spres.headers.date;
@@ -157,23 +159,23 @@ var listener = http.createServer(function (req, res) {
 					headers: spres.headers,
 					statusCode: spres.statusCode
 				};
-				cStream = fs.createWriteStream('./cache/data_' + makeCacheURL(urlPath));
+				cStream = fs.createWriteStream(`./cache/data_${makeCacheURL(urlPath)}`);
 			}
 
-			spres.on('data', function (data) {
+			spres.on('data', (data) => {
 				res.write(data);
 				if (cStream) {
 					cStream.write(data);
 				}
 			});
 
-			spres.on('end', function () {
+			spres.on('end', () => {
 				res.end();
 				if (cData && config.cacheEnabled) {
 					cache[urlPath] = cData;
-					fs.writeFile('./cache/index.json', JSON.stringify(cache), function (err) {
+					fs.writeFile('./cache/index.json', JSON.stringify(cache), (err) => {
 						if (err)
-							console.warn('Error writing cache: ' + err);
+							console.warn(`Error writing cache: ${err}`);
 					});
 				}
 			});
