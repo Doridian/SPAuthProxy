@@ -41,7 +41,7 @@ function _reqStringCB (cb, err, res) {
 }
 
 class Speedport {
-	constructor() {
+	constructor(ip, password, options) {
 		this.options = options || {};
 		this.options.host = ip;
 
