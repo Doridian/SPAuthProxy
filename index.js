@@ -43,7 +43,7 @@ function makeCacheURL (url) {
 const listener = http.createServer((req, res) => {
 	req.setEncoding('utf8');
 
-	const hasData = false;
+	let hasData = false;
 	let data = '';
 
 	req.on('data', (chunk) => {
