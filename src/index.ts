@@ -16,10 +16,10 @@ interface Config {
     };
 }
 
-const config = <Config> JSON.parse(readFileSync('./config').toString('utf8'));
+const config = <Config> JSON.parse(readFileSync('./config.json').toString('utf8'));
 
 try {
-    mkdirSync('cache');
+    mkdirSync('./cache');
 } catch (e) {
     console.error(e.stack || e);
     if (config.cacheEnabled) {
@@ -61,7 +61,7 @@ interface CacheData {
 
 const cache: { [key: string]: CacheData; } = (() => {
     try {
-        return require('./cache/index');
+        return JSON.parse(readFileSync('./cache/index.json').toString('utf8'));
     } catch (e) {
         return {};
     }
