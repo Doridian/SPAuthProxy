@@ -4,11 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "clear": "rimraf dist",
+    "build": "npm run clear && tsc",
+    "lint": "tslint -t verbose -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "json5": "^0.5.1"
+    "@types/json5": "0.0.29",
+    "@types/node": "^8.5.1",
+    "json5": "^0.5.1",
+    "rimraf": "^2.6.2",
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.2"
   }
 }
