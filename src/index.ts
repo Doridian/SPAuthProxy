@@ -2,7 +2,6 @@ import { createReadStream, createWriteStream, mkdirSync, readFileSync, writeFile
 import { createServer, IncomingHttpHeaders, IncomingMessage } from 'http';
 import { parse } from 'querystring';
 import { Speedport } from './speedport';
-import { EEXIST } from 'constants';
 
 interface Config {
     speedport: {
@@ -22,7 +21,7 @@ const config = <Config> JSON.parse(readFileSync('./config.json').toString('utf8'
 try {
     mkdirSync('./cache');
 } catch (e) {
-    if (e.code !== EEXIST) {
+    if (e.code !== 'EEXIST') {
         console.error(e.stack || e);
         if (config.cacheEnabled) {
             process.exit(1);

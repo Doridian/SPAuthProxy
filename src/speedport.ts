@@ -38,37 +38,32 @@ export class SPRequestOptions {
 }
 
 export class Speedport {
-    public lastHeartbeat?: string;
-    public loginStageOneReply?: string;
-    public loginStageTwoReply?: string;
+    public lastHeartbeat?: string = JSON.stringify([
+        {
+            varid: 'loginstate',
+            vartype: 'status',
+            varvalue: '1',
+        },
+    ]);
+    public loginStageOneReply?: string = undefined;
+    public loginStageTwoReply?: string = undefined;
 
-    private challengev?: string;
-    private sessionID?: string;
-    private cookie?: string;
+    private challengev?: string = undefined;
+    private sessionID?: string = undefined;
+    private cookie?: string = undefined;
     private cookieHeaders?: string[];
 
     private _loginInProgress = false;
     private loggedIn = 0;
     private _loginCallbacks: ((err?: Error) => void)[] = [];
 
-    private agent: Agent;
+    private agent: Agent = new Agent({
+        keepAlive: true,
+        maxSockets: 3,
+    });
 
     constructor(ip: string, private password: string, private options: RequestOptions = {}) {
         options.host = ip;
-
-        this.agent = new Agent({
-            keepAlive: true,
-            maxSockets: 3,
-        });
-
-        this.lastHeartbeat = JSON.stringify([
-            {
-                varid: 'loginstate',
-                vartype: 'status',
-                varvalue: '1',
-            },
-        ]);
-
         setInterval(() => this._heartbeat(), 5000);
     }
 
