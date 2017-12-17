@@ -76,8 +76,12 @@ export class Speedport {
         const httpOptions = options.http || {};
 
         let cookie = this.cookie;
-        if (cookie && httpOptions.headers && httpOptions.headers.cookie) {
-            cookie += `; ${httpOptions.headers.cookie}`;
+        if (httpOptions.headers && httpOptions.headers.cookie) {
+            if (cookie) {
+                cookie += `; ${httpOptions.headers.cookie}`;
+            } else {
+                cookie = <string> httpOptions.headers.cookie;
+            }
         }
 
         Object.assign(httpOptions, this.options, {
