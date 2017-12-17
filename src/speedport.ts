@@ -82,7 +82,7 @@ export class Speedport {
 
         Object.assign(httpOptions, this.options, {
             headers: {
-                cookie,
+                cookie: cookie || null,
             },
         });
 
